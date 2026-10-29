@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { OrderItem, DeliveryMethod, OrderStatus, PaymentStatus, Order } from '../types';
 import { X, Plus, Trash2, ShoppingBag, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const OrderModal: React.FC = () => {
   const {
@@ -13,7 +14,10 @@ export const OrderModal: React.FC = () => {
     setEditingOrder,
     addOrder,
     updateOrder,
+    deleteOrder,
   } = useApp();
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [customerId, setCustomerId] = useState('');
@@ -566,24 +570,62 @@ export const OrderModal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-end gap-3 pt-3 border-t border-stone-200">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-semibold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold rounded-xl shadow-md cursor-pointer transition transform active:scale-95"
-                >
-                  {editingOrder ? 'Update Order' : 'Save & Collate Order'}
-                </button>
+              <div className="mt-4 flex items-center justify-between gap-3 pt-3 border-t border-stone-200">
+                {editingOrder ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleting(true)}
+                    className="px-3.5 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Order</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold rounded-xl shadow-md cursor-pointer transition transform active:scale-95"
+                  >
+                    {editingOrder ? 'Update Order' : 'Save & Collate Order'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </form>
+
+        {/* Delete Confirmation inside OrderModal */}
+        {editingOrder && (
+          <ConfirmationModal
+            isOpen={isDeleting}
+            title={`Delete Order ${editingOrder.orderNumber}`}
+            message="Are you sure you want to permanently delete this order? All items, customer billing, and collation entries will be removed."
+            confirmText="Yes, Delete Order"
+            cancelText="Cancel"
+            isDestructive={true}
+            itemDetails={[
+              { label: 'Customer', value: editingOrder.customerName },
+              { label: 'Bottles', value: `${editingOrder.items.reduce((s, i) => s + i.quantity, 0)} bottles` },
+              { label: 'Total', value: `$${editingOrder.total.toFixed(2)}` },
+            ]}
+            onConfirm={() => {
+              deleteOrder(editingOrder.id);
+              setIsDeleting(false);
+              handleClose();
+            }}
+            onCancel={() => setIsDeleting(false)}
+          />
+        )}
       </div>
     </div>
   );

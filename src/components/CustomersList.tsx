@@ -14,6 +14,7 @@ import {
   Edit2,
   Trash2,
 } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const CustomersList: React.FC = () => {
   const {
@@ -27,6 +28,7 @@ export const CustomersList: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   // Compute lifetime customer stats from orders
   const customerStats = useMemo(() => {
@@ -70,9 +72,7 @@ export const CustomersList: React.FC = () => {
   }, [customers, searchQuery]);
 
   const handleDelete = (cust: Customer) => {
-    if (window.confirm(`Delete customer ${cust.name}? Historical orders will remain intact.`)) {
-      deleteCustomer(cust.id);
-    }
+    setCustomerToDelete(cust);
   };
 
   const startOrderForCustomer = (cust: Customer) => {
@@ -226,6 +226,32 @@ export const CustomersList: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Delete Customer Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!customerToDelete}
+        title={`Delete Customer: ${customerToDelete?.name || ''}`}
+        message="Are you sure you want to delete this customer? Historical orders will remain intact, but this customer profile will be removed."
+        confirmText="Yes, Delete Customer"
+        cancelText="Cancel"
+        isDestructive={true}
+        itemDetails={
+          customerToDelete
+            ? [
+                { label: 'Customer Name', value: customerToDelete.name },
+                { label: 'Type', value: customerToDelete.type.toUpperCase() },
+                { label: 'Phone', value: customerToDelete.phone || 'N/A' },
+              ]
+            : undefined
+        }
+        onConfirm={() => {
+          if (customerToDelete) {
+            deleteCustomer(customerToDelete.id);
+            setCustomerToDelete(null);
+          }
+        }}
+        onCancel={() => setCustomerToDelete(null)}
+      />
     </div>
   );
 };

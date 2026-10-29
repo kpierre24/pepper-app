@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   DollarSign,
@@ -12,8 +12,11 @@ import {
   CheckCircle2,
   Clock,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { ARTISANAL_TRIO_IMAGE } from '../data/seedData';
+import { ConfirmationModal } from './ConfirmationModal';
+import { Order } from '../types';
 
 export const DashboardOverview: React.FC = () => {
   const {
@@ -26,7 +29,10 @@ export const DashboardOverview: React.FC = () => {
     setIsNewProductModalOpen,
     fulfillOrder,
     setViewingInvoiceOrder,
+    deleteOrder,
   } = useApp();
+
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   const lowStockProducts = products.filter((p) => p.inventoryCount <= p.minStockAlert);
   const totalDeficitBottles = pendingCollation.reduce((acc, c) => acc + c.stockDeficit, 0);
@@ -597,6 +603,13 @@ export const DashboardOverview: React.FC = () => {
                       >
                         Slip
                       </button>
+                      <button
+                        onClick={() => setOrderToDelete(ord)}
+                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded text-xs cursor-pointer transition"
+                        title="Delete order"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -605,6 +618,35 @@ export const DashboardOverview: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Order Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!orderToDelete}
+        title={`Delete Order ${orderToDelete?.orderNumber || ''}`}
+        message="Are you sure you want to delete this order? All revenue, margin calculations, and records for this order will be permanently removed."
+        confirmText="Yes, Delete Order"
+        cancelText="Cancel"
+        isDestructive={true}
+        itemDetails={
+          orderToDelete
+            ? [
+                { label: 'Customer', value: orderToDelete.customerName },
+                {
+                  label: 'Sauce Bottles',
+                  value: `${orderToDelete.items.reduce((s: number, i) => s + i.quantity, 0)} bottles`,
+                },
+                { label: 'Total', value: `$${orderToDelete.total.toFixed(2)}` },
+              ]
+            : undefined
+        }
+        onConfirm={() => {
+          if (orderToDelete) {
+            deleteOrder(orderToDelete.id);
+            setOrderToDelete(null);
+          }
+        }}
+        onCancel={() => setOrderToDelete(null)}
+      />
     </div>
   );
 };

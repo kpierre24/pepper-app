@@ -14,7 +14,9 @@ import {
   Sparkles,
   ArrowRight,
   Filter,
+  Trash2,
 } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const OrderCollationView: React.FC = () => {
   const {
@@ -25,7 +27,10 @@ export const OrderCollationView: React.FC = () => {
     fulfillOrder,
     batchUpdateOrderStatus,
     setViewingInvoiceOrder,
+    deleteOrder,
   } = useApp();
+
+  const [orderToDelete, setOrderToDelete] = useState<any | null>(null);
 
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | DeliveryMethod>('all');
   const [packedItems, setPackedItems] = useState<Record<string, boolean>>({});
@@ -353,6 +358,14 @@ export const OrderCollationView: React.FC = () => {
                       >
                         Slip
                       </button>
+
+                      <button
+                        onClick={() => setOrderToDelete(ord)}
+                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition"
+                        title="Delete order"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
@@ -435,6 +448,35 @@ export const OrderCollationView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!orderToDelete}
+        title={`Delete Order ${orderToDelete?.orderNumber || ''}`}
+        message="Are you sure you want to permanently delete this order? It will be removed from your active kitchen collation and packing lists."
+        confirmText="Yes, Delete Order"
+        cancelText="Cancel"
+        isDestructive={true}
+        itemDetails={
+          orderToDelete
+            ? [
+                { label: 'Customer', value: orderToDelete.customerName },
+                {
+                  label: 'Sauces to Pack',
+                  value: `${orderToDelete.items.reduce((s: number, i: any) => s + i.quantity, 0)} bottles`,
+                },
+                { label: 'Order Total', value: `$${orderToDelete.total.toFixed(2)}` },
+              ]
+            : undefined
+        }
+        onConfirm={() => {
+          if (orderToDelete) {
+            deleteOrder(orderToDelete.id);
+            setOrderToDelete(null);
+          }
+        }}
+        onCancel={() => setOrderToDelete(null)}
+      />
     </div>
   );
 };

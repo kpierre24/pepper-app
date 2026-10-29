@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Printer, Flame, CheckCircle2, MapPin, Phone, Mail } from 'lucide-react';
+import { X, Printer, Flame, CheckCircle2, MapPin, Phone, Mail, Trash2 } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const InvoiceModal: React.FC = () => {
-  const { viewingInvoiceOrder, setViewingInvoiceOrder } = useApp();
+  const { viewingInvoiceOrder, setViewingInvoiceOrder, deleteOrder } = useApp();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!viewingInvoiceOrder) return null;
 
@@ -26,6 +28,14 @@ export const InvoiceModal: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDeleting(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-red-900/60 text-red-300 hover:text-red-200 rounded-lg text-xs font-semibold cursor-pointer border border-stone-700 transition"
+              title="Delete this order"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
             <button
               onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-sm"
@@ -216,6 +226,27 @@ export const InvoiceModal: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={isDeleting}
+          title={`Delete Order ${order.orderNumber}`}
+          message="Are you sure you want to delete this order? All invoice items, metrics, and customer tracking will be permanently removed."
+          confirmText="Yes, Delete Order"
+          cancelText="Cancel"
+          isDestructive={true}
+          itemDetails={[
+            { label: 'Customer', value: order.customerName },
+            { label: 'Bottles', value: `${totalBottles} bottles` },
+            { label: 'Total Due', value: `$${order.total.toFixed(2)}` },
+          ]}
+          onConfirm={() => {
+            deleteOrder(order.id);
+            setIsDeleting(false);
+            setViewingInvoiceOrder(null);
+          }}
+          onCancel={() => setIsDeleting(false)}
+        />
       </div>
     </div>
   );

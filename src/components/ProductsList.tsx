@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ARTISANAL_TRIO_IMAGE } from '../data/seedData';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const ProductsList: React.FC = () => {
   const {
@@ -27,15 +28,14 @@ export const ProductsList: React.FC = () => {
   } = useApp();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
   const handleDelete = (prod: Product) => {
-    if (window.confirm(`Are you sure you want to delete ${prod.name}?`)) {
-      deleteProduct(prod.id);
-    }
+    setProductToDelete(prod);
   };
 
   // Helper for color branding based on sauce name
@@ -353,6 +353,32 @@ export const ProductsList: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Delete Product Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!productToDelete}
+        title={`Delete Sauce: ${productToDelete?.name || ''}`}
+        message="Are you sure you want to remove this pepper sauce from your active catalog?"
+        confirmText="Yes, Delete Sauce"
+        cancelText="Cancel"
+        isDestructive={true}
+        itemDetails={
+          productToDelete
+            ? [
+                { label: 'Sauce Name', value: productToDelete.name },
+                { label: 'Bottle Size', value: productToDelete.bottleSize },
+                { label: 'Current Inventory', value: `${productToDelete.inventoryCount} bottles` },
+              ]
+            : undefined
+        }
+        onConfirm={() => {
+          if (productToDelete) {
+            deleteProduct(productToDelete.id);
+            setProductToDelete(null);
+          }
+        }}
+        onCancel={() => setProductToDelete(null)}
+      />
     </div>
   );
 };

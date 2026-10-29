@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Package,
 } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const OrdersList: React.FC = () => {
   const {
@@ -61,10 +62,22 @@ export const OrdersList: React.FC = () => {
     return { totalRev, totalCost, totalProfit, totalBottles, margin };
   }, [filteredOrders]);
 
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [deleteToast, setDeleteToast] = useState<string | null>(null);
+
   const handleDelete = (order: Order) => {
-    if (window.confirm(`Are you sure you want to delete order ${order.orderNumber} for ${order.customerName}?`)) {
-      deleteOrder(order.id);
-    }
+    setOrderToDelete(order);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (!orderToDelete) return;
+    const deletedNum = orderToDelete.orderNumber;
+    deleteOrder(orderToDelete.id);
+    setOrderToDelete(null);
+    setDeleteToast(`Order ${deletedNum} deleted successfully.`);
+    setTimeout(() => {
+      setDeleteToast(null);
+    }, 3500);
   };
 
   const statusCounts = useMemo(() => {
@@ -398,6 +411,39 @@ export const OrdersList: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!orderToDelete}
+        title={`Delete Order ${orderToDelete?.orderNumber || ''}`}
+        message="Are you sure you want to permanently delete this order? All collated items, metrics, and billing records for this order will be removed."
+        confirmText="Yes, Delete Order"
+        cancelText="Keep Order"
+        isDestructive={true}
+        itemDetails={
+          orderToDelete
+            ? [
+                { label: 'Customer', value: orderToDelete.customerName },
+                {
+                  label: 'Sauce Bottles',
+                  value: `${orderToDelete.items.reduce((s, i) => s + i.quantity, 0)} bottles`,
+                },
+                { label: 'Order Total', value: `$${orderToDelete.total.toFixed(2)}` },
+                { label: 'Status', value: orderToDelete.status.toUpperCase() },
+              ]
+            : undefined
+        }
+        onConfirm={confirmDeleteOrder}
+        onCancel={() => setOrderToDelete(null)}
+      />
+
+      {/* Delete Toast Feedback */}
+      {deleteToast && (
+        <div className="fixed bottom-5 right-5 z-50 bg-stone-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-stone-700 text-xs font-semibold flex items-center gap-2 animate-bounce">
+          <Trash2 className="w-4 h-4 text-red-400" />
+          <span>{deleteToast}</span>
         </div>
       )}
     </div>
