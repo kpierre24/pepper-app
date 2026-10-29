@@ -1,0 +1,6 @@
+{
+  "name": "Renee's Artisanal - Pepper Sauce Orders & Profit Manager",
+  "description": "Collate orders, track production costs, profit margins, inventory, and fulfill customer orders for Renee's Artisanal pepper sauce business.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
